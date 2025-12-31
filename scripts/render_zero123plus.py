@@ -2,9 +2,9 @@ import bpy
 import math
 import os
 import sys
-import numpy as np
 import argparse
 import json
+import mathutils
 
 # Zero123++ v1.2 Constants
 ELEVATIONS = [20.0, -10.0, 20.0, -10.0, 20.0, -10.0]
@@ -61,14 +61,6 @@ def normalize_object(obj):
     
     # Scale
     bbox_corners = [obj.matrix_world @ mathutils.Vector(corner) for corner in obj.bound_box]
-    
-    # Add support for mathutils without import error (Blender internal)
-    try:
-        import mathutils
-        bbox_corners = [obj.matrix_world @ mathutils.Vector(corner) for corner in obj.bound_box]
-    except ImportError:
-        # Fallback if mathutils not available (unlikely in Blender)
-        pass
         
     # Compute max dimension
     # Simple approximation using dimensions
@@ -183,18 +175,14 @@ if __name__ == "__main__":
         bpy.ops.render.render(write_still=True)
         
         # Save Metadata (3x4 Matrix: [R|t])
-        # Blender world matrix is 4x4. We need 3x4 (or 4x4)
-        matrix = np.array(cam.matrix_world) # 4x4
-        # Note: Blender uses openGL coordinates (Y up, -Z forward) usually. 
-        # Zero123++ typically expects standard CV coordinates? 
-        # Actually Zero123++ v1.2 usually handles canonical cameras internally.
-        # We will save the raw Blender matrix for now.
+        # Blender world matrix is 4x4.
+        matrix_list = [list(row) for row in cam.matrix_world]
         
         camera_metadata.append({
             "view_idx": i,
             "elevation": elev,
             "azimuth": azim,
-            "matrix_world": matrix.tolist()
+            "matrix_world": matrix_list
         })
         
     # Save Metadata JSON
