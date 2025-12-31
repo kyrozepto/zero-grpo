@@ -121,10 +121,25 @@ if __name__ == "__main__":
     
     # Setup Scene
     reset_scene()
+    
+    # Set Render Settings (Set early for headless compatibility)
+    bpy.context.scene.render.engine = 'CYCLES'
+    bpy.context.scene.cycles.device = 'CPU'
+    bpy.context.scene.cycles.samples = 128
+    bpy.context.scene.render.resolution_x = RESOLUTION
+    bpy.context.scene.render.resolution_y = RESOLUTION
+    bpy.context.scene.render.film_transparent = True
+    
     cam = setup_camera()
     setup_lighting()
     
     # Import GLB
+    input_path = os.path.abspath(input_path)
+    if not os.path.exists(input_path):
+        print(f"Error: Input file not found at {input_path}")
+        sys.exit(1)
+        
+    print(f"Importing: {input_path}")
     bpy.ops.import_scene.gltf(filepath=input_path)
     
     # Get imported object (assume it's the first mesh object found)
@@ -143,11 +158,6 @@ if __name__ == "__main__":
     
     main_obj = bpy.context.view_layer.objects.active
     normalize_object(main_obj)
-    
-    # Set Render Settings
-    bpy.context.scene.render.resolution_x = RESOLUTION
-    bpy.context.scene.render.resolution_y = RESOLUTION
-    bpy.context.scene.render.film_transparent = True
     
     # Render Views
     camera_metadata = []
